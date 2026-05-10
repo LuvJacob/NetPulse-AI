@@ -1,0 +1,5 @@
+# NetPulse AI
+Flask>=3.0.0,<4
+requests>=2.31.0,<3
+google-generativeai>=0.8.6,<1
+python-dotenv>=1.0.0,<2

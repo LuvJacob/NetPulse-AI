@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Alerts · NetPulse AI{% endblock %}
+{% block page_title %}Alerts{% endblock %}
+{% block page_sub %}Stored alert history · SQLite{% endblock %}
+
+{% block main %}
+      <section class="card alerts-card page-section">
+        <div class="alerts-head">
+          <div class="alerts-title-wrap">
+            <span class="alerts-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2h16l-2-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <h2 class="alerts-title">Recent alerts</h2>
+          </div>
+          <span class="alerts-placeholder muted">Email/SMS not configured</span>
+        </div>
+
+        {% if not alerts %}
+          <p class="empty empty-pad">No alerts recorded yet.</p>
+        {% else %}
+          <div class="table-scroll">
+            <table class="alerts-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Target</th>
+                  <th>Type</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in alerts %}
+                  <tr>
+                    <td class="mono muted">{{ a.timestamp }}</td>
+                    <td class="mono">{{ a.target }}</td>
+                    <td>
+                      {% if a.alert_type == 'OUTAGE' %}
+                        <span class="badge badge-down badge-table">OUTAGE</span>
+                      {% elif a.alert_type == 'HIGH_LATENCY' %}
+                        <span class="badge badge-warn badge-table">HIGH LATENCY</span>
+                      {% else %}
+                        <span class="badge badge-muted badge-table">{{ a.alert_type }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ a.message }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+{% endblock %}

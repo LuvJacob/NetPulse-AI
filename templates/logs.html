@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Logs · NetPulse AI{% endblock %}
+{% block page_title %}Monitoring logs{% endblock %}
+{% block page_sub %}Historical probes from SQLite{% endblock %}
+
+{% block main %}
+      <section class="card page-section card-pad">
+        <h2 class="section-heading">Filters</h2>
+        <form method="get" class="filters-form">
+          <div class="filter-group">
+            <label for="f-target">Target</label>
+            <select id="f-target" name="target_id" class="form-select">
+              <option value="">All targets</option>
+              {% for t in target_options %}
+                <option value="{{ t.id }}" {% if selected_target_id == t.id %}selected{% endif %}>{{ t.target }}{% if t.is_active != 1 %} (disabled){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="f-limit">Limit</label>
+            <select id="f-limit" name="limit" class="form-select">
+              {% for n in [50, 100, 200, 500] %}
+                <option value="{{ n }}" {% if selected_limit == n %}selected{% endif %}>{{ n }} rows</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="f-hours">Window</label>
+            <select id="f-hours" name="hours" class="form-select">
+              <option value="1" {% if selected_hours == 1 %}selected{% endif %}>Last 1 hour</option>
+              <option value="6" {% if selected_hours == 6 %}selected{% endif %}>Last 6 hours</option>
+              <option value="24" {% if selected_hours == 24 %}selected{% endif %}>Last 24 hours</option>
+              <option value="168" {% if selected_hours == 168 %}selected{% endif %}>Last 7 days</option>
+              <option value="all" {% if selected_hours is none %}selected{% endif %}>All time</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+      </section>
+
+      <section class="card page-section">
+        <div class="alerts-head">
+          <h2 class="alerts-title">Log entries</h2>
+          <span class="muted">{{ log_rows|length }} rows</span>
+        </div>
+
+        {% if not log_rows %}
+          <p class="empty empty-pad">No log rows match these filters.</p>
+        {% else %}
+          <div class="table-scroll">
+            <table class="alerts-table logs-table">
+              <thead>
+                <tr>
+                  <th>Target</th>
+                  <th>Status</th>
+                  <th>Response (ms)</th>
+                  <th>Timestamp (UTC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in log_rows %}
+                  <tr>
+                    <td class="mono">{{ row.hostname }}</td>
+                    <td>
+                      {% if row.status == 'UP' %}
+                        <span class="badge badge-up badge-table">UP</span>
+                      {% else %}
+                        <span class="badge badge-down badge-table">DOWN</span>
+                      {% endif %}
+                    </td>
+                    <td class="mono">
+                      {% if row.response_time_ms is not none %}
+                        {{ "%.1f"|format(row.response_time_ms) }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                    <td class="mono muted">{{ row.timestamp }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+{% endblock %}

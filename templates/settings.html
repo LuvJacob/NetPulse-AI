@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Settings · NetPulse AI{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_sub %}Read-only configuration from environment &amp; defaults{% endblock %}
+
+{% block main %}
+      <section class="card page-section card-pad">
+        <h2 class="section-heading">Runtime configuration</h2>
+        <p class="lede-inline muted">Values apply after restart if changed via environment variables.</p>
+
+        <dl class="settings-list">
+          <div class="settings-row">
+            <dt>Monitoring interval</dt>
+            <dd class="mono">{{ settings.interval_seconds }} s</dd>
+          </div>
+          <div class="settings-row">
+            <dt>Latency alert threshold</dt>
+            <dd class="mono">{{ settings.latency_threshold_ms }} ms</dd>
+          </div>
+          <div class="settings-row">
+            <dt>Metrics window (dashboard aggregates)</dt>
+            <dd class="mono">{{ settings.metrics_window_hours }} hours</dd>
+          </div>
+          <div class="settings-row">
+            <dt>HTTP probe timeout</dt>
+            <dd class="mono">{{ settings.http_timeout_seconds }} s</dd>
+          </div>
+          <div class="settings-row">
+            <dt>Database path</dt>
+            <dd class="mono settings-path">{{ settings.database_path }}</dd>
+          </div>
+          <div class="settings-row">
+            <dt>Gemini model</dt>
+            <dd class="mono">{{ settings.gemini_model }}</dd>
+          </div>
+          <div class="settings-row">
+            <dt>AI summary cache TTL</dt>
+            <dd class="mono">{{ settings.ai_cache_ttl_seconds }} s</dd>
+          </div>
+          <div class="settings-row">
+            <dt>AI context window</dt>
+            <dd class="mono">{{ settings.ai_context_hours }} hours (logs / rollups)</dd>
+          </div>
+          <div class="settings-row">
+            <dt>GEMINI_API_KEY</dt>
+            <dd class="mono">
+              {% if settings.gemini_configured %}
+                <span class="badge badge-up badge-table">configured</span>
+              {% else %}
+                <span class="badge badge-muted badge-table">not set</span>
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+      </section>
+{% endblock %}

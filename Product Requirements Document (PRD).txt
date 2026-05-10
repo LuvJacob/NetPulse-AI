@@ -1,0 +1,199 @@
+Product Requirements Document (PRD)
+AI-Powered Network Monitor Dashboard
+1. Overview
+Product Name
+
+NetPulse AI
+(working title)
+
+Product Summary
+
+NetPulse AI is a lightweight network monitoring dashboard that continuously checks the availability and latency of websites, servers, and devices. It logs uptime metrics, detects outages, visualizes network health, and uses AI to summarize performance issues and anomalies.
+
+The project is designed as a portfolio-ready systems/network engineering application that demonstrates:
+
+Python backend development
+Networking fundamentals
+Monitoring systems
+Automation
+Data persistence
+Dashboard development
+AI integration
+2. Goals
+Primary Goals
+Monitor multiple network targets automatically
+Store and visualize monitoring data
+Detect outages and high latency
+Provide AI-generated network health summaries
+Secondary Goals
+Build a résumé-worthy infrastructure project
+Learn Flask and backend architecture
+Practice systems engineering concepts
+Gain experience with APIs and AI integration
+3. Target Users
+Primary User
+
+Students or junior IT professionals wanting to monitor:
+
+websites
+home lab devices
+servers
+APIs
+Secondary User
+
+Small teams needing a lightweight monitoring tool.
+
+4. Core Features
+Phase 1 — MVP
+Monitoring Engine
+
+The system should:
+
+Ping targets every 30 seconds
+Measure latency/response time
+Detect online/offline status
+Record timestamps
+Dashboard
+
+Display:
+
+Target name
+Current status
+Response time
+Last checked time
+Database Logging
+
+Store:
+
+latency
+status
+timestamps
+outage history
+Supported Targets
+
+Initially:
+
+Domains/websites only
+
+Examples:
+
+google.com
+ibm.com
+att.com
+Phase 2 — Enhanced Monitoring
+Charts & Visualizations
+
+Add:
+
+latency graphs
+uptime percentages
+outage history
+Alerts
+
+Add:
+
+high latency warnings
+outage notifications
+Advanced Monitoring
+
+Add:
+
+packet loss tracking
+rolling averages
+retry logic
+UI Improvements
+
+Add:
+
+color-coded statuses
+dark mode
+auto-refresh dashboard
+Phase 3 — AI Features
+AI Log Analysis
+
+Use Google Gemini API to:
+
+summarize outages
+explain latency spikes
+identify unstable network behavior
+detect possible routing or congestion issues
+AI Recommendations
+
+Examples:
+
+“Latency to IBM increased by 35% during the last hour.”
+“AT&T experienced intermittent packet loss.”
+“Google remained stable with low average latency.”
+AI Incident Reports
+
+Generate:
+
+daily health summaries
+outage explanations
+unusual activity reports
+uptime trend analysis
+5. Functional Requirements
+AI Integration
+
+The system should:
+
+Send recent monitoring logs to Gemini
+Generate readable network health summaries
+Analyze trends in latency and outages
+Return concise explanations suitable for dashboard display
+
+The system must:
+
+Securely store the Gemini API key in a .env file
+Handle API failures gracefully
+Keep AI logic separated inside ai_service.py
+7. Updated Tech Stack
+Backend
+Python
+Flask
+Database
+SQLite
+Frontend
+HTML
+CSS
+JavaScript (later)
+Monitoring
+requests
+subprocess
+ping
+AI
+Google Gemini API
+google-generativeai
+python-dotenv
+Visualization
+Chart.js
+8. Updated System Architecture
+
++----------------+
+| Flask Dashboard|
++--------+-------+
+|
+v
++--------+---------+
+| Monitoring Service|
++--------+---------+
+|
++--------+---------+
+| SQLite Database |
++--------+---------+
+|
+v
++--------+---------+
+| Gemini AI Service|
++------------------+
+
+11. Future Improvements
+Advanced AI Features
+AI anomaly detection
+Predictive outage warnings
+AI-generated troubleshooting recommendations
+AI trend analysis
+Natural language incident explanations
+12. Resume Description
+
+Built an AI-assisted network monitoring dashboard using Python, Flask, SQLite, and OpenAI APIs to track uptime, latency, outages, and generate automated network health summaries.

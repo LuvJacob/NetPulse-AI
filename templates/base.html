@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NetPulse AI{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="app-root">
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebarNav" aria-label="Main navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-logo" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20c4-8 8-12 12-12s8 4 12 12" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M8 24c3-5 6-8 8-8s5 3 8 8" stroke="var(--accent-muted)" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+        </span>
+        <div>
+          <div class="sidebar-title">NetPulse AI</div>
+          <div class="sidebar-sub muted">Monitoring</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="sidebar-nav-label muted">Menu</span>
+        <a class="sidebar-link {{ 'is-active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="sidebar-link {{ 'is-active' if active_nav == 'alerts' else '' }}" href="{{ url_for('alerts_page') }}">Alerts</a>
+        <a class="sidebar-link {{ 'is-active' if active_nav == 'targets' else '' }}" href="{{ url_for('targets_page') }}">Targets</a>
+        <a class="sidebar-link {{ 'is-active' if active_nav == 'logs' else '' }}" href="{{ url_for('logs_page') }}">Logs</a>
+        <a class="sidebar-link {{ 'is-active' if active_nav == 'settings' else '' }}" href="{{ url_for('settings_page') }}">Settings</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-monitor">
+          <span class="sidebar-monitor-dot" aria-hidden="true"></span>
+          <div>
+            <div class="sidebar-monitor-title">Monitoring</div>
+            <div id="sidebar-monitor-status" class="sidebar-monitor-meta muted mono">Active</div>
+          </div>
+        </div>
+        <div id="sidebar-last-sync" class="sidebar-last muted mono">{% block sidebar_sync %}Last sync —{% endblock %}</div>
+      </div>
+    </aside>
+
+    <div
+      class="sidebar-backdrop"
+      id="sidebarBackdrop"
+      hidden
+      aria-hidden="true"
+    ></div>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" class="icon-btn" id="sidebarToggle" aria-label="Toggle sidebar" title="Toggle sidebar">
+            <span class="icon-hamburger" aria-hidden="true"></span>
+          </button>
+          <div>
+            <h1 class="page-title">{% block page_title %}NetPulse AI{% endblock %}</h1>
+            <p class="page-sub muted">{% block page_sub %}{% endblock %}</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          {% block topbar_right %}{% endblock %}
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="main-scroll">
+        {% block main %}{% endblock %}
+      </div>
+    </div>
+  </div>
+  {% block scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='sidebar.js') }}" defer></script>
+</body>
+</html>

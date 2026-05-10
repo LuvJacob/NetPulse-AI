@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Targets · NetPulse AI{% endblock %}
+{% block page_title %}Targets{% endblock %}
+{% block page_sub %}Hosts and URLs monitored by NetPulse{% endblock %}
+
+{% block main %}
+      <section class="card page-section card-pad">
+        <h2 class="section-heading">Add target</h2>
+        <p class="lede-inline muted">Enter a hostname (e.g. <code>example.com</code>) or URL — normalized before saving.</p>
+        <form method="post" class="inline-form" action="{{ url_for('targets_page') }}">
+          <input type="hidden" name="action" value="add">
+          <label class="sr-only" for="target-input">Target hostname or URL</label>
+          <input id="target-input" name="hostname" type="text" class="form-input" placeholder="example.com or https://example.com" autocomplete="off">
+          <button type="submit" class="btn btn-primary">Add target</button>
+        </form>
+      </section>
+
+      <section class="card page-section">
+        <div class="alerts-head">
+          <h2 class="alerts-title">Monitored targets</h2>
+          <span class="muted">{{ target_rows|length }} configured</span>
+        </div>
+
+        {% if not target_rows %}
+          <p class="empty empty-pad">No targets yet. Add one above.</p>
+        {% else %}
+          <div class="table-scroll">
+            <table class="alerts-table targets-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Target</th>
+                  <th>Status</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in target_rows %}
+                  <tr>
+                    <td class="mono muted">{{ t.id }}</td>
+                    <td class="mono">{{ t.target }}</td>
+                    <td>
+                      {% if t.is_active == 1 %}
+                        <span class="badge badge-enabled">Enabled</span>
+                      {% else %}
+                        <span class="badge badge-disabled">Disabled</span>
+                      {% endif %}
+                    </td>
+                    <td class="col-actions">
+                      <div class="target-actions-cell">
+                        <form method="post" class="form-inline-delete" action="{{ url_for('targets_page') }}">
+                          <input type="hidden" name="action" value="toggle_active">
+                          <input type="hidden" name="target_id" value="{{ t.id }}">
+                          <input type="hidden" name="enabled" value="{{ 0 if t.is_active == 1 else 1 }}">
+                          <button type="submit" class="btn btn-sm {% if t.is_active == 1 %}btn-disable{% else %}btn-enable{% endif %}">{{ 'Disable' if t.is_active == 1 else 'Enable' }}</button>
+                        </form>
+                        <form method="post" class="form-inline-delete" action="{{ url_for('targets_page') }}" onsubmit="return confirm('Remove {{ t.target }} and its probe history?');">
+                          <input type="hidden" name="action" value="delete">
+                          <input type="hidden" name="target_id" value="{{ t.id }}">
+                          <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+{% endblock %}

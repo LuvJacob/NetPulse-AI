@@ -1,0 +1,22 @@
+# Secrets & local env
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Flask / local instance
+instance/
+
+# Local databases & data (never commit probe history or keys)
+*.sqlite3
+*.db
+data/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

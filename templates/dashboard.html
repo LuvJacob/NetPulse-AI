@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · NetPulse AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Network health · {{ config.METRICS_WINDOW_HOURS }}h rolling window{% endblock %}
+
+{% block topbar_right %}
+  <div class="refresh-pill">
+    <span class="refresh-dot" aria-hidden="true"></span>
+    <span class="muted">Auto-refresh</span>
+    <strong class="mono">{{ config.MONITOR_INTERVAL_SECONDS }}s</strong>
+  </div>
+  <div id="header-last-updated" class="last-updated muted mono">Last updated —</div>
+{% endblock %}
+
+{% block main %}
+      {% if not targets %}
+        <section class="card card-pad">
+          <p class="empty">No targets configured yet.</p>
+        </section>
+      {% else %}
+        <section class="metric-row">
+          {% for row in targets %}
+            {% set slow = row.status == 'UP'
+                and row.response_time_ms is not none
+                and row.response_time_ms >= latency_threshold_ms %}
+            {% set pct_val = row.uptime_pct if row.uptime_pct is not none else 0 %}
+            <article class="target-card">
+              <div class="target-card-head">
+                <span class="status-dot {% if row.status == 'DOWN' %}is-down{% elif slow %}is-warn{% else %}is-up{% endif %}" aria-hidden="true"></span>
+                <span class="target-card-name mono">{{ row.hostname }}</span>
+                {% if row.is_active == 0 %}
+                  <span class="badge badge-disabled badge-table">Disabled</span>
+                {% endif %}
+                <span class="target-card-spacer"></span>
+                {% if row.status == 'UP' %}
+                  {% if slow %}
+                    <span class="badge badge-warn">UP · slow</span>
+                  {% else %}
+                    <span class="badge badge-up">UP</span>
+                  {% endif %}
+                {% elif row.status == 'DOWN' %}
+                  <span class="badge badge-down">DOWN</span>
+                {% else %}
+                  <span class="badge badge-muted">—</span>
+                {% endif %}
+              </div>
+              <div class="target-card-label muted">Uptime ({{ config.METRICS_WINDOW_HOURS }}h)</div>
+              <div class="target-card-bar-row">
+                <div class="target-bar-track">
+                  <div class="target-bar-fill" style="width: {{ pct_val }}%;"></div>
+                </div>
+                <span class="target-card-pct mono">
+                  {% if row.uptime_pct is not none %}{{ "%.1f"|format(row.uptime_pct) }}%{% else %}—{% endif %}
+                </span>
+              </div>
+              <div class="target-card-stats">
+                <div>
+                  <div class="muted stat-label">Avg latency</div>
+                  <div class="stat-value mono stat-latency">
+                    {% if row.avg_latency_ms is not none %}{{ "%.0f"|format(row.avg_latency_ms) }} ms{% else %}—{% endif %}
+                  </div>
+                </div>
+                <div>
+                  <div class="muted stat-label">Outages</div>
+                  <div class="stat-value mono stat-outages">{{ row.outage_count }}</div>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </section>
+      {% endif %}
+
+      <section
+        class="card ai-summary-card"
+        id="ai-summary-panel"
+        data-cache-ttl-seconds="{{ config.AI_CACHE_TTL_SECONDS }}"
+      >
+        <div class="ai-card-head">
+          <div class="ai-card-title-wrap">
+            <span class="ai-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="4" stroke="var(--accent-muted)" stroke-width="1.4"/>
+              </svg>
+            </span>
+            <div>
+              <h2 class="chart-title ai-card-title">AI network summary</h2>
+              <p class="chart-sub muted">Google Gemini · last {{ config.AI_CONTEXT_HOURS }}h context · {{ config.AI_LOG_LIMIT }} logs / {{ config.AI_ALERT_LIMIT }} alerts max</p>
+            </div>
+          </div>
+          <div class="ai-card-actions">
+            <span id="ai-status-badge" class="ai-badge ai-badge-muted" role="status">—</span>
+            <button type="button" id="ai-refresh-btn" class="btn btn-primary btn-sm">Refresh AI summary</button>
+          </div>
+        </div>
+        <div id="ai-summary-body-wrap">
+          <p id="ai-summary-text" class="ai-summary-text muted">Loading summary…</p>
+          <p id="ai-summary-meta" class="ai-summary-meta muted mono"></p>
+        </div>
+      </section>
+
+      <section
+        class="charts-mount"
+        id="dashboard-charts"
+        data-refresh-ms="{{ config.MONITOR_INTERVAL_SECONDS * 1000 }}"
+        data-metrics-hours="{{ config.METRICS_WINDOW_HOURS }}"
+        data-log-limit="2000"
+      >
+        <div class="charts-layout">
+          <article class="card chart-card-main">
+            <div class="chart-card-head">
+              <div>
+                <h2 class="chart-title">Latency over time</h2>
+                <p class="chart-sub muted">Response time (ms) · gaps indicate DOWN / no sample</p>
+              </div>
+              <div class="chart-head-actions">
+                <label class="sr-only" for="chart-target-select">Chart target</label>
+                <select id="chart-target-select" class="charts-select" title="Targets"></select>
+              </div>
+            </div>
+
+            <div class="time-range" role="group" aria-label="Time range">
+              <button type="button" class="range-btn" data-hours="1">1H</button>
+              <button type="button" class="range-btn" data-hours="6">6H</button>
+              <button type="button" class="range-btn is-active" data-hours="24">24H</button>
+              <button type="button" class="range-btn" data-hours="168">7D</button>
+            </div>
+
+            <div class="chart-canvas-main">
+              <canvas id="latencyChart" aria-label="Latency over time"></canvas>
+            </div>
+            <p id="charts-status" class="charts-foot muted mono"></p>
+          </article>
+
+          <div class="charts-col-right">
+            <article class="card chart-card-side">
+              <h2 class="chart-title-sm">Uptime (aggregate)</h2>
+              <p class="chart-sub muted">Mean uptime across targets · {{ config.METRICS_WINDOW_HOURS }}h window</p>
+              <div class="chart-canvas-donut">
+                <canvas id="uptimeDonutChart" aria-label="Uptime donut"></canvas>
+              </div>
+              <p id="uptime-donut-caption" class="donut-caption muted mono"></p>
+            </article>
+
+            <article class="card chart-card-side">
+              <h2 class="chart-title-sm">Outages</h2>
+              <p class="chart-sub muted">DOWN samples · {{ config.METRICS_WINDOW_HOURS }}h</p>
+              <div class="chart-canvas-side">
+                <canvas id="outageChart" aria-label="Outages by target"></canvas>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="card alerts-card">
+        <div class="alerts-head">
+          <div class="alerts-title-wrap">
+            <span class="alerts-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2h16l-2-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <h2 class="alerts-title">Recent alerts</h2>
+          </div>
+          <a class="link-quiet" href="{{ url_for('alerts_page') }}">View all alerts →</a>
+        </div>
+
+        {% if not recent_alerts %}
+          <p class="empty empty-pad">No alerts recorded yet.</p>
+        {% else %}
+          <div class="table-scroll">
+            <table class="alerts-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Target</th>
+                  <th>Type</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in recent_alerts %}
+                  <tr>
+                    <td class="mono muted">{{ a.timestamp }}</td>
+                    <td class="mono">{{ a.target }}</td>
+                    <td>
+                      {% if a.alert_type == 'OUTAGE' %}
+                        <span class="badge badge-down badge-table">OUTAGE</span>
+                      {% elif a.alert_type == 'HIGH_LATENCY' %}
+                        <span class="badge badge-warn badge-table">HIGH LATENCY</span>
+                      {% else %}
+                        <span class="badge badge-muted badge-table">{{ a.alert_type }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ a.message }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+
+      <footer class="app-footer muted">
+        NetPulse AI · Phase 3 · checks every {{ config.MONITOR_INTERVAL_SECONDS }}s ·
+        <code>/api/status</code> · <code>/api/logs</code> · <code>/api/alerts</code>
+      </footer>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
+{% endblock %}
