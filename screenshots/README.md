@@ -1,12 +1,13 @@
-# Screenshots (optional)
+## Screenshots
 
-Add portfolio images here for `README.md`:
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
 
-| File | Suggested content |
-|------|-------------------|
-| `dashboard.png` | Main dashboard with charts and target cards |
-| `targets.png` | Targets page — list, add form, enable/disable |
-| `alerts.png` | Alerts history |
-| `ai-summary.png` | Gemini AI summary panel on the dashboard |
+### Targets Management
+![Targets](screenshots/targets.png)
 
-These files are **not** committed until you add them locally.
+### Monitoring Charts
+![Charts](screenshots/charts.png)
+
+### Discord Alerts
+![Discord Alerts](screenshots/discord-alerts.png)
